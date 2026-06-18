@@ -7,18 +7,25 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
+
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+
+    "baseUrl": ".",
+
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     "incremental": true,
     "skipLibCheck": true,
+
     "strictNullChecks": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": {
-      "@/*": ["src/*"]
-    }
+
+    "ignoreDeprecations": "6.0"
   }
 }
