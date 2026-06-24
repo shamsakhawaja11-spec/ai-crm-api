@@ -1,12 +1,15 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
 }
-// prisma/schema.prisma
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
 
 enum UserRole {
   OWNER
@@ -15,13 +18,103 @@ enum UserRole {
   MEMBER
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  UNQUALIFIED
+  CONVERTED
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  COLD_CALL
+  EMAIL_CAMPAIGN
+  SOCIAL_MEDIA
+  TRADE_SHOW
+  OTHER
+}
+
+enum DealStage {
+  PROSPECTING
+  QUALIFICATION
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+  TASK
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum NotificationType {
+  LEAD_ASSIGNED
+  DEAL_STAGE_MOVED
+  DEAL_WON
+  DEAL_LOST
+  TASK_DUE
+  MENTION
+  AI_INSIGHT
+  SYSTEM
+}
+
+enum WebhookEvent {
+  LEAD_CREATED
+  LEAD_UPDATED
+  LEAD_CONVERTED
+  DEAL_CREATED
+  DEAL_STAGE_MOVED
+  DEAL_WON
+  DEAL_LOST
+  CONTACT_CREATED
+  CONTACT_UPDATED
+}
+
+enum EmailStatus {
+  DRAFT
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+enum SentimentType {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+// ─── User + Auth ──────────────────────────────────────────────────────────────
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
   passwordHash    String
   firstName       String
   lastName        String
-  role            UserRole  @default(MEMBER)   // ← ADD THIS
+  role            UserRole  @default(MEMBER)
   avatarUrl       String?
   phone           String?
   timezone        String    @default("UTC")
@@ -31,7 +124,17 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  refreshTokens RefreshToken[]
+  refreshTokens  RefreshToken[]
+  teamMembers    TeamMember[]
+  assignedLeads  Lead[]         @relation("LeadAssignee")
+  assignedDeals  Deal[]         @relation("DealAssignee")
+  activities     Activity[]
+  tasks          Task[]         @relation("TaskAssignee")
+  createdTasks   Task[]         @relation("TaskCreator")
+  notes          Note[]
+  emails         Email[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
 
   @@index([email])
 }
@@ -39,7 +142,7 @@ model User {
 model RefreshToken {
   id        String    @id @default(cuid())
   token     String    @unique
-  userId    String    @unique                  // ← ADD @unique (one token per user)
+  userId    String    @unique
   expiresAt DateTime
   createdAt DateTime  @default(now())
   revokedAt DateTime?
@@ -50,4 +153,470 @@ model RefreshToken {
 
   @@index([token])
   @@index([userId])
+}
+
+// ─── Team / Workspace ─────────────────────────────────────────────────────────
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members    TeamMember[]
+  contacts   Contact[]
+  companies  Company[]
+  leads      Lead[]
+  deals      Deal[]
+  pipelines  Pipeline[]
+  activities Activity[]
+  tasks      Task[]
+  notes      Note[]
+  emails     Email[]
+  webhooks   Webhook[]
+  auditLogs  AuditLog[]
+
+  @@index([slug])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      UserRole @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+// ─── Contact ──────────────────────────────────────────────────────────────────
+
+model Contact {
+  id          String   @id @default(cuid())
+  teamId      String
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  jobTitle    String?
+  department  String?
+  avatarUrl   String?
+  linkedinUrl String?
+  twitterUrl  String?
+  address     String?
+  city        String?
+  country     String?
+  notes       String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  company    Company?   @relation(fields: [companyId], references: [id])
+  companyId  String?
+  leads      Lead[]
+  deals      Deal[]
+  activities Activity[]
+  taskLinks  Task[]
+  noteLinks  Note[]
+  emails     Email[]
+  embeddings Embedding[]
+
+  @@index([teamId])
+  @@index([email])
+  @@index([companyId])
+}
+
+// ─── Company ──────────────────────────────────────────────────────────────────
+
+model Company {
+  id          String   @id @default(cuid())
+  teamId      String
+  name        String
+  domain      String?
+  industry    String?
+  size        String?
+  revenue     Float?
+  phone       String?
+  website     String?
+  linkedinUrl String?
+  address     String?
+  city        String?
+  country     String?
+  description String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team       Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  contacts   Contact[]
+  leads      Lead[]
+  deals      Deal[]
+  embeddings Embedding[]
+
+  @@index([teamId])
+  @@index([domain])
+}
+
+// ─── Lead ─────────────────────────────────────────────────────────────────────
+
+model Lead {
+  id             String     @id @default(cuid())
+  teamId         String
+  assigneeId     String?
+  contactId      String?
+  companyId      String?
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  jobTitle       String?
+  company        String?
+  source         LeadSource @default(OTHER)
+  status         LeadStatus @default(NEW)
+  score          Int        @default(0)
+  scoreReason    String?
+  estimatedValue Float?
+  notes          String?
+  tags           String[]
+  convertedAt    DateTime?
+  convertedToId  String?    // contactId after conversion
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignee   User?      @relation("LeadAssignee", fields: [assigneeId], references: [id])
+  contact    Contact?   @relation(fields: [contactId], references: [id])
+  companyRel Company?   @relation(fields: [companyId], references: [id])
+  activities Activity[]
+  tasks      Task[]
+  noteLinks  Note[]
+  emails     Email[]
+  embeddings Embedding[]
+
+  @@index([teamId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([score])
+}
+
+// ─── Pipeline + Stage ─────────────────────────────────────────────────────────
+
+model Pipeline {
+  id        String   @id @default(cuid())
+  teamId    String
+  name      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  stages Stage[]
+  deals  Deal[]
+
+  @@index([teamId])
+}
+
+model Stage {
+  id         String   @id @default(cuid())
+  pipelineId String
+  name       String
+  order      Int
+  color      String   @default("#6366f1")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals    Deal[]
+
+  @@index([pipelineId])
+}
+
+// ─── Deal ─────────────────────────────────────────────────────────────────────
+
+model Deal {
+  id               String    @id @default(cuid())
+  teamId           String
+  assigneeId       String?
+  contactId        String?
+  companyId        String?
+  pipelineId       String
+  stageId          String
+  title            String
+  value            Float     @default(0)
+  currency         String    @default("USD")
+  probability      Int       @default(0)
+  expectedCloseAt  DateTime?
+  closedAt         DateTime?
+  lostReason       String?
+  forecastCategory String?
+  tags             String[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignee   User?      @relation("DealAssignee", fields: [assigneeId], references: [id])
+  contact    Contact?   @relation(fields: [contactId], references: [id])
+  companyRel Company?   @relation(fields: [companyId], references: [id])
+  pipeline   Pipeline   @relation(fields: [pipelineId], references: [id])
+  stage      Stage      @relation(fields: [stageId], references: [id])
+  activities Activity[]
+  tasks      Task[]
+  noteLinks  Note[]
+  emails     Email[]
+  embeddings Embedding[]
+
+  @@index([teamId])
+  @@index([assigneeId])
+  @@index([stageId])
+  @@index([pipelineId])
+}
+
+// ─── Activity ─────────────────────────────────────────────────────────────────
+
+model Activity {
+  id          String       @id @default(cuid())
+  teamId      String
+  userId      String
+  type        ActivityType
+  title       String
+  description String?
+  duration    Int?         // minutes
+  outcome     String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  contactId   String?
+  leadId      String?
+  dealId      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  team    Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id])
+  contact Contact? @relation(fields: [contactId], references: [id])
+  lead    Lead?    @relation(fields: [leadId], references: [id])
+  deal    Deal?    @relation(fields: [dealId], references: [id])
+
+  @@index([teamId])
+  @@index([userId])
+  @@index([contactId])
+  @@index([leadId])
+  @@index([dealId])
+}
+
+// ─── Task ─────────────────────────────────────────────────────────────────────
+
+model Task {
+  id          String       @id @default(cuid())
+  teamId      String
+  creatorId   String
+  assigneeId  String?
+  title       String
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
+  dueAt       DateTime?
+  completedAt DateTime?
+  contactId   String?
+  leadId      String?
+  dealId      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  creator  User     @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignee User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  contact  Contact? @relation(fields: [contactId], references: [id])
+  lead     Lead?    @relation(fields: [leadId], references: [id])
+  deal     Deal?    @relation(fields: [dealId], references: [id])
+
+  @@index([teamId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+// ─── Note ─────────────────────────────────────────────────────────────────────
+
+model Note {
+  id        String        @id @default(cuid())
+  teamId    String
+  userId    String
+  content   String
+  sentiment SentimentType?
+  contactId String?
+  leadId    String?
+  dealId    String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id])
+  contact   Contact?   @relation(fields: [contactId], references: [id])
+  lead      Lead?      @relation(fields: [leadId], references: [id])
+  deal      Deal?      @relation(fields: [dealId], references: [id])
+  embeddings Embedding[]
+
+  @@index([teamId])
+  @@index([userId])
+  @@index([contactId])
+  @@index([leadId])
+  @@index([dealId])
+}
+
+// ─── Email ────────────────────────────────────────────────────────────────────
+
+model Email {
+  id          String      @id @default(cuid())
+  teamId      String
+  userId      String
+  templateId  String?
+  to          String[]
+  cc          String[]
+  bcc         String[]
+  subject     String
+  body        String
+  status      EmailStatus @default(DRAFT)
+  sentAt      DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  resendId    String?     // Resend message ID
+  contactId   String?
+  leadId      String?
+  dealId      String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  team     Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id])
+  template EmailTemplate? @relation(fields: [templateId], references: [id])
+  contact  Contact?      @relation(fields: [contactId], references: [id])
+  lead     Lead?         @relation(fields: [leadId], references: [id])
+  deal     Deal?         @relation(fields: [dealId], references: [id])
+
+  @@index([teamId])
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── Email Template ───────────────────────────────────────────────────────────
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  body      String
+  variables String[] // e.g. ["firstName", "companyName"]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emails Email[]
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  metadata  Json?            // { leadId, dealId, etc. }
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ─── Webhook ──────────────────────────────────────────────────────────────────
+
+model Webhook {
+  id        String         @id @default(cuid())
+  teamId    String
+  url       String
+  events    WebhookEvent[]
+  secret    String
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  team         Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  deliveries   WebhookDelivery[]
+
+  @@index([teamId])
+}
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  webhookId   String
+  event       WebhookEvent
+  payload     Json
+  statusCode  Int?
+  response    String?
+  attempts    Int      @default(0)
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  teamId     String
+  userId     String
+  action     String   // e.g. "lead.created", "deal.stage_moved"
+  entity     String   // e.g. "Lead", "Deal"
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([teamId])
+  @@index([userId])
+}
+
+
+// --- Embedding (pgvector) -----------------------------------------------------
+
+model Embedding {
+  id        String                     @id @default(cuid())
+  entity    String
+  entityId  String
+  content   String
+  vector    Unsupported("vector(1536)")
+  createdAt DateTime                   @default(now())
+
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId String?
+  lead      Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId    String?
+  note      Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  noteId    String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?
+  deal      Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  dealId    String?
+
+  @@index([entity, entityId])
 }
