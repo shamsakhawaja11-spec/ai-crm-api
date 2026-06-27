@@ -142,7 +142,7 @@ model User {
 model RefreshToken {
   id        String    @id @default(cuid())
   token     String    @unique
-  userId    String    @unique
+  userId    String    
   expiresAt DateTime
   createdAt DateTime  @default(now())
   revokedAt DateTime?
