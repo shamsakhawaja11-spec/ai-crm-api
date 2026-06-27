@@ -1,16 +1,12 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsEmail, IsOptional, IsString, MaxLength } from "class-validator";
+import {  IsOptional, IsString, IsUrl, MaxLength } from "class-validator";
 
 export class UpdateUserDto{
-    @ApiPropertyOptional({example:'Shamsa'})
-    @IsEmail()
-    @IsOptional()
-    email?:string;
     @ApiPropertyOptional({example:'+923325005586'})
     @IsString()
     @IsOptional()
     @MaxLength(11,{message:'phone number must be less then 11'})
-    phoneNumber?:string;
+    phone?:string;
     @ApiPropertyOptional({example:'Noor'})
     @IsOptional()
     @IsString()
@@ -20,10 +16,10 @@ export class UpdateUserDto{
     @IsOptional()
     @IsString()
     @MaxLength(30,{message:'first name must be less then 30'})
-    fistName?:string;
+    firstName?:string;
     @ApiPropertyOptional({example:'http://me.com'})
     @IsOptional()
-    @IsString()
+    @IsUrl()
     avatarUrl?:string;
     @ApiPropertyOptional({example:'Asia/islamabad'})
     @IsString()
