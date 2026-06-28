@@ -1,6 +1,6 @@
 import { PrismaService } from "@/database/prisma.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { UpdateUserDto } from "../dto/update-user.dto";
+import { UpdateUserDto } from '../dto/update-user.dto';
 
 const USER_SELECT = {
   id: true,
