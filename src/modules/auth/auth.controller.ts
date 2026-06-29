@@ -23,15 +23,12 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { JwtPayload } from './strategies/jwt.strategy';
-import { User } from '@prisma/client';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // ─── POST /v1/auth/register ───────────────────────────────────────────────
   @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -42,7 +39,6 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  // ─── POST /v1/auth/login ──────────────────────────────────────────────────
   @Public()
   @UseGuards(AuthGuard('local'))
   @Post('login')
@@ -52,10 +48,9 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Returns access + refresh tokens' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Req() req: Request) {
-    return this.authService.login(req.user as User);
+    return this.authService.login(req.user as any);
   }
 
-  // ─── POST /v1/auth/refresh ────────────────────────────────────────────────
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -66,23 +61,21 @@ export class AuthController {
     return this.authService.refreshTokens(dto.refreshToken);
   }
 
-  // ─── POST /v1/auth/logout ─────────────────────────────────────────────────
   @ApiBearerAuth()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Revoke refresh token' })
   @ApiResponse({ status: 204, description: 'Logged out successfully' })
-  async logout(@CurrentUser() user: JwtPayload) {
-    await this.authService.logout(user.sub);
+  async logout(@CurrentUser() user: any) {
+    await this.authService.logout(user.id);
   }
 
-  // ─── GET /v1/auth/me ──────────────────────────────────────────────────────
   @ApiBearerAuth()
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Current user' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async me(@CurrentUser() user: JwtPayload) {
-    return this.authService.me(user.sub);
+  async me(@CurrentUser() user: any) {
+    return this.authService.me(user.id);
   }
 }
