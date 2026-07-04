@@ -3,11 +3,12 @@ import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { TeamsModule } from './modules/teams/teams.module';
 
 @Module({
   imports: [
     ConfigModule,
-    DatabaseModule,AuthModule,UsersModule,
+    DatabaseModule,AuthModule,UsersModule,TeamsModule,
   ],
 })
 export class AppModule {}
