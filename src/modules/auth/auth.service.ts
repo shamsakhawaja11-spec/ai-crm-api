@@ -18,7 +18,6 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  // ─── Register ─────────────────────────────────────────────────────────────
   async register(dto: RegisterDto) {
     const exists = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -43,7 +42,6 @@ export class AuthService {
     };
   }
 
-  // ─── Validate user credentials (used by LocalStrategy) ───────────────────
   async validateUser(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
@@ -57,7 +55,6 @@ export class AuthService {
     return user;
   }
 
-  // ─── Login: issue access + refresh tokens ─────────────────────────────────
   async login(user: User) {
     const payload = {
       sub: user.id,
@@ -82,7 +79,6 @@ export class AuthService {
     };
   }
 
-  // ─── Me ───────────────────────────────────────────────────────────────────
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -103,9 +99,7 @@ export class AuthService {
     return user;
   }
 
-  // ─── Refresh tokens ───────────────────────────────────────────────────────
   async refreshTokens(rawToken: string) {
-    // Decode without verifying to extract sub (userId)
     let payload: { sub: string; type: string };
     try {
       payload = this.jwtService.verify(rawToken, {
@@ -119,7 +113,7 @@ export class AuthService {
       throw new UnauthorizedException('Wrong token type');
     }
 
-    const stored = await this.prisma.refreshToken.findUnique({
+    const stored = await this.prisma.refreshToken.findFirst({
       where: { userId: payload.sub },
       include: { user: true },
     });
@@ -128,14 +122,12 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token expired or revoked');
     }
 
-    // Compare raw JWT string against stored hash
     const isValid = await this.compareRefreshToken(rawToken, stored.token);
     if (!isValid) throw new UnauthorizedException('Refresh token mismatch');
 
     return this.login(stored.user);
   }
 
-  // ─── Logout ───────────────────────────────────────────────────────────────
   async logout(userId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
       where: { userId },
@@ -143,7 +135,6 @@ export class AuthService {
     });
   }
 
-  // ─── Private: generate access token ──────────────────────────────────────
   private generateAccessToken(payload: Record<string, any>): string {
     return this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret'),
@@ -153,7 +144,6 @@ export class AuthService {
     });
   }
 
-  // ─── Private: generate + persist refresh token ───────────────────────────
   private async generateRefreshToken(user: User): Promise<string> {
     const expiresAt = new Date();
     expiresAt.setDate(
@@ -161,7 +151,6 @@ export class AuthService {
         this.configService.get<number>('jwt.refreshExpiresInDays', 7),
     );
 
-    // Issue refresh token as signed JWT so we can extract userId from it
     const rawToken = this.jwtService.sign(
       { sub: user.id, type: 'refresh' },
       {
@@ -174,16 +163,13 @@ export class AuthService {
 
     const hashedToken = await bcrypt.hash(rawToken, 10);
 
-    await this.prisma.refreshToken.upsert({
-      where: { userId: user.id },
-      update: { token: hashedToken, expiresAt, revokedAt: null },
-      create: { userId: user.id, token: hashedToken, expiresAt },
+    await this.prisma.refreshToken.create({
+      data: { userId: user.id, token: hashedToken, expiresAt },
     });
 
     return rawToken;
   }
 
-  // ─── Private: compare refresh token against hash ─────────────────────────
   private async compareRefreshToken(
     rawToken: string,
     hashedToken: string,
