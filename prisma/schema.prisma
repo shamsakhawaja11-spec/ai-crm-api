@@ -183,7 +183,7 @@ model Team {
 
 model TeamMember {
   id        String   @id @default(cuid())
-  teamId    String
+  team  Id    String
   userId    String
   role      UserRole @default(MEMBER)
   createdAt DateTime @default(now())
