@@ -4,11 +4,13 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { TeamsModule } from './modules/teams/teams.module';
+import { ContactsModule } from './modules/contacts/contacts.modue';
+import { CompaniesModule } from './modules/companies/companies.module';
 
 @Module({
   imports: [
     ConfigModule,
-    DatabaseModule,AuthModule,UsersModule,TeamsModule,
+    DatabaseModule,AuthModule,UsersModule,TeamsModule,ContactsModule,CompaniesModule
   ],
 })
 export class AppModule {}
