@@ -6,11 +6,13 @@ import { UsersModule } from './modules/users/users.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { ContactsModule } from './modules/contacts/contacts.modue';
 import { CompaniesModule } from './modules/companies/companies.module';
+import { LeadsModule } from './modules/leads/leads.module';
 
 @Module({
   imports: [
     ConfigModule,
-    DatabaseModule,AuthModule,UsersModule,TeamsModule,ContactsModule,CompaniesModule
+    DatabaseModule,AuthModule,UsersModule,TeamsModule,
+    ContactsModule,CompaniesModule,LeadsModule,
   ],
 })
 export class AppModule {}
