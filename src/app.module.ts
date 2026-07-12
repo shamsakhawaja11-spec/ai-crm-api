@@ -7,12 +7,14 @@ import { TeamsModule } from './modules/teams/teams.module';
 import { ContactsModule } from './modules/contacts/contacts.modue';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { LeadsModule } from './modules/leads/leads.module';
+import { DealsModule } from './modules/deals/deals.module';
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
+    DealsModule,
   ],
 })
 export class AppModule {}
