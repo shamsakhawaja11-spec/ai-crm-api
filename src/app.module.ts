@@ -8,13 +8,14 @@ import { ContactsModule } from './modules/contacts/contacts.modue';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { LeadsModule } from './modules/leads/leads.module';
 import { DealsModule } from './modules/deals/deals.module';
+import { PipelineModule } from './modules/pipeline/pipeline.module';
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
-    DealsModule,
+    DealsModule,PipelineModule,
   ],
 })
 export class AppModule {}
