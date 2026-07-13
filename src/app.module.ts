@@ -9,13 +9,14 @@ import { CompaniesModule } from './modules/companies/companies.module';
 import { LeadsModule } from './modules/leads/leads.module';
 import { DealsModule } from './modules/deals/deals.module';
 import { PipelineModule } from './modules/pipeline/pipeline.module';
+import { ActivitiesModule } from './modules/activities/activities.module';
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
-    DealsModule,PipelineModule,
+    DealsModule,PipelineModule,ActivitiesModule
   ],
 })
 export class AppModule {}
