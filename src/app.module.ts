@@ -10,13 +10,14 @@ import { LeadsModule } from './modules/leads/leads.module';
 import { DealsModule } from './modules/deals/deals.module';
 import { PipelineModule } from './modules/pipeline/pipeline.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
-    DealsModule,PipelineModule,ActivitiesModule
+    DealsModule,PipelineModule,ActivitiesModule,TasksModule
   ],
 })
 export class AppModule {}
