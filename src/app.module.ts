@@ -12,13 +12,15 @@ import { PipelineModule } from './modules/pipeline/pipeline.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { NotesModule } from './modules/Notes/notes.module';
+import { RedisModule } from './modules/shared/redis/redis.module';
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
-    DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule
+    DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
+    RedisModule,
   ],
 })
 export class AppModule {}
