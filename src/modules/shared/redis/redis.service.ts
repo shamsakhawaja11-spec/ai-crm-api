@@ -11,6 +11,7 @@ export class RedisService implements OnModuleInit,OnModuleDestroy{
         this.client=new Redis({
             host:this.config.get<string>('redis.host'),
             port:this.config.get<number>('redis.port'),
+            password:this.config.get<string>('redis.password'),
         });
         this.client.on('connect',()=>this.logger.log('Redis connected'));
         this.client.on('error',(err)=>this.logger.error('Redis error',err));
