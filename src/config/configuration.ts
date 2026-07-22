@@ -27,6 +27,7 @@
 
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
+    from:process.env.RESEND_FROM_EMAIL
   },
 
   resend: {
