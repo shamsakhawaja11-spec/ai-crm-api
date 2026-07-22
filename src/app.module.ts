@@ -12,7 +12,8 @@ import { PipelineModule } from './modules/pipeline/pipeline.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { NotesModule } from './modules/Notes/notes.module';
-import { RedisModule } from './modules/shared/redis/redis.module';
+import { RedisModule } from './shared/redis/redis.module';
+import { EmailModule } from './shared/email/email.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { RedisModule } from './modules/shared/redis/redis.module';
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
     DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
-    RedisModule,
+    RedisModule,EmailModule,
   ],
 })
 export class AppModule {}
