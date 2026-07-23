@@ -10,7 +10,7 @@ export class EmailService{
     }
     async sendEmail(to:string,subject:string,html:string){
         const {data,error}=await this.resend.emails.send({
-            from:this.config.get<string>('resend.from'),
+            from:this.config.get<string>('resend.from')??'onboarding@resend.dev',
             to:[to],
             subject:subject,
             html:html,
