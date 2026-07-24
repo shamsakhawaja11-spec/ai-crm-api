@@ -14,6 +14,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { NotesModule } from './modules/Notes/notes.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { EmailModule } from './shared/email/email.module';
+import { StorageModule } from './shared/storage/storage.module';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { EmailModule } from './shared/email/email.module';
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
     DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
-    RedisModule,EmailModule,
+    RedisModule,EmailModule,StorageModule,
   ],
 })
 export class AppModule {}
