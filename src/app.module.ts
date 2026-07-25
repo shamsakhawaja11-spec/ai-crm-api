@@ -16,14 +16,26 @@ import { RedisModule } from './shared/redis/redis.module';
 import { EmailModule } from './shared/email/email.module';
 import { StorageModule } from './shared/storage/storage.module';
 import { SearchModule } from './shared/search/search.module';
-
+import {BullModule} from "@nestjs/bullmq";
+import { ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
     DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
-    RedisModule,EmailModule,StorageModule,SearchModule
+    RedisModule,EmailModule,StorageModule,SearchModule,
+    BullModule.forRootAsync({
+      imports:[ConfigModule],
+      inject:[ConfigService],
+      useFactory:(config:ConfigService)=>({
+        connection:{
+          host:config.get<string>('redis.host'),
+          port:config.get<number>('redis.port'),
+          password:config.get<string>('redis.password'),
+        },
+      }),
+    }),
   ],
 })
 export class AppModule {}
