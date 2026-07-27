@@ -18,13 +18,14 @@ import { StorageModule } from './shared/storage/storage.module';
 import { SearchModule } from './shared/search/search.module';
 import {BullModule} from "@nestjs/bullmq";
 import { ConfigService } from '@nestjs/config';
+import { QueuesModule } from './queues/queues.module';
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
     DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
-    RedisModule,EmailModule,StorageModule,SearchModule,
+    RedisModule,EmailModule,StorageModule,SearchModule,QueuesModule,
     BullModule.forRootAsync({
       imports:[ConfigModule],
       inject:[ConfigService],
