@@ -6,7 +6,9 @@ import { Injectable } from "@nestjs/common";
 @Injectable()
 @Processor(QUEUE_NAMES.EMAIL)
 export class EmailConsumer extends WorkerHost{
-    constructor(private emailService:EmailService){}
+    constructor(private emailService:EmailService){
+        super();
+    }
     async process(job: Job) {
         switch(job.name){
             case 'welcome-email':
