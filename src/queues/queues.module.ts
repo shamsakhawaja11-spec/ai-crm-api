@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bullmq";
-
+import { EmailProducer } from './email/email.producer';
+import { EmailConsumer } from './email/email.consumer';
 export const QUEUE_NAMES = {
   EMAIL: 'email',
   AI: 'ai-processing',
@@ -19,6 +20,11 @@ export const QUEUE_NAMES = {
       { name: QUEUE_NAMES.ANALYTICS },
     ),
   ],
-  exports: [BullModule],
+   providers: [
+    EmailProducer,
+    EmailConsumer,
+  ],
+
+  exports: [BullModule,EmailProducer],
 })
 export class QueuesModule {}
