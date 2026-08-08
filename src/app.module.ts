@@ -20,6 +20,7 @@ import {BullModule} from "@nestjs/bullmq";
 import { ConfigService } from '@nestjs/config';
 import { QueuesModule } from './queues/queues.module';
 import { RealtimeModule } from './shared/real-time/realtime.module';
+import { ReportsModule } from './modules/reports/reports.module';
 @Module({
   imports: [
     ConfigModule,
@@ -27,6 +28,7 @@ import { RealtimeModule } from './shared/real-time/realtime.module';
     ContactsModule,CompaniesModule,LeadsModule,
     DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
     RedisModule,EmailModule,StorageModule,SearchModule,QueuesModule,RealtimeModule,EmailModule,
+    ReportsModule,
     BullModule.forRootAsync({
       imports:[ConfigModule],
       inject:[ConfigService],
