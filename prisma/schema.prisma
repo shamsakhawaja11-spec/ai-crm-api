@@ -109,31 +109,31 @@ enum SentimentType {
 // ─── User + Auth ──────────────────────────────────────────────────────────────
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
+  id              String         @id @default(cuid())
+  email           String         @unique
   passwordHash    String
   firstName       String
   lastName        String
-  role            UserRole  @default(MEMBER)
+  role            UserRole       @default(MEMBER)
   avatarUrl       String?
   phone           String?
-  timezone        String    @default("UTC")
-  isEmailVerified Boolean   @default(false)
-  isActive        Boolean   @default(true)
+  timezone        String         @default("UTC")
+  isEmailVerified Boolean        @default(false)
+  isActive        Boolean        @default(true)
   lastLoginAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  refreshTokens  RefreshToken[]
-  teamMembers    TeamMember[]
-  assignedLeads  Lead[]         @relation("LeadAssignee")
-  assignedDeals  Deal[]         @relation("DealAssignee")
-  activities     Activity[]
-  tasks          Task[]         @relation("TaskAssignee")
-  createdTasks   Task[]         @relation("TaskCreator")
-  notes          Note[]
-  emails         Email[]
-  notifications  Notification[]
-  auditLogs      AuditLog[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  refreshTokens   RefreshToken[]
+  teamMembers     TeamMember[]
+  assignedLeads   Lead[]         @relation("LeadAssignee")
+  assignedDeals   Deal[]         @relation("DealAssignee")
+  activities      Activity[]
+  tasks           Task[]         @relation("TaskAssignee")
+  createdTasks    Task[]         @relation("TaskCreator")
+  notes           Note[]
+  emails          Email[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
 
   @@index([email])
 }
@@ -141,7 +141,7 @@ model User {
 model RefreshToken {
   id        String    @id @default(cuid())
   token     String    @unique
-  userId    String    
+  userId    String
   expiresAt DateTime
   createdAt DateTime  @default(now())
   revokedAt DateTime?
@@ -165,25 +165,26 @@ model Team {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members    TeamMember[]
-  contacts   Contact[]
-  companies  Company[]
-  leads      Lead[]
-  deals      Deal[]
-  pipelines  Pipeline[]
-  activities Activity[]
-  tasks      Task[]
-  notes      Note[]
-  emails     Email[]
-  webhooks   Webhook[]
-  auditLogs  AuditLog[]
+  analyticsDaily AnalyticsDaily[]
+  members        TeamMember[]
+  contacts       Contact[]
+  companies      Company[]
+  leads          Lead[]
+  deals          Deal[]
+  pipelines      Pipeline[]
+  activities     Activity[]
+  tasks          Task[]
+  notes          Note[]
+  emails         Email[]
+  webhooks       Webhook[]
+  auditLogs      AuditLog[]
 
   @@index([slug])
 }
 
 model TeamMember {
   id        String   @id @default(cuid())
-  team  Id    String
+  teamId    String
   userId    String
   role      UserRole @default(MEMBER)
   createdAt DateTime @default(now())
@@ -218,8 +219,8 @@ model Contact {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  company    Company?   @relation(fields: [companyId], references: [id])
+  team       Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  company    Company?    @relation(fields: [companyId], references: [id])
   companyId  String?
   leads      Lead[]
   deals      Deal[]
@@ -287,14 +288,14 @@ model Lead {
   notes          String?
   tags           String[]
   convertedAt    DateTime?
-  convertedToId  String?    // contactId after conversion
+  convertedToId  String? // contactId after conversion
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
-  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  assignee   User?      @relation("LeadAssignee", fields: [assigneeId], references: [id])
-  contact    Contact?   @relation(fields: [contactId], references: [id])
-  companyRel Company?   @relation(fields: [companyId], references: [id])
+  team       Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignee   User?       @relation("LeadAssignee", fields: [assigneeId], references: [id])
+  contact    Contact?    @relation(fields: [contactId], references: [id])
+  companyRel Company?    @relation(fields: [companyId], references: [id])
   activities Activity[]
   tasks      Task[]
   noteLinks  Note[]
@@ -308,6 +309,25 @@ model Lead {
 }
 
 // ─── Pipeline + Stage ─────────────────────────────────────────────────────────
+model AnalyticsDaily {
+  id     String   @id @default(cuid())
+  teamId String
+  date   DateTime
+
+  wonDeals   Int   @default(0)
+  wonRevenue Float @default(0)
+
+  convertedLeads Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, date])
+  @@index([teamId])
+  @@index([date])
+}
 
 model Pipeline {
   id        String   @id @default(cuid())
@@ -361,12 +381,12 @@ model Deal {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  assignee   User?      @relation("DealAssignee", fields: [assigneeId], references: [id])
-  contact    Contact?   @relation(fields: [contactId], references: [id])
-  companyRel Company?   @relation(fields: [companyId], references: [id])
-  pipeline   Pipeline   @relation(fields: [pipelineId], references: [id])
-  stage      Stage      @relation(fields: [stageId], references: [id])
+  team       Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignee   User?       @relation("DealAssignee", fields: [assigneeId], references: [id])
+  contact    Contact?    @relation(fields: [contactId], references: [id])
+  companyRel Company?    @relation(fields: [companyId], references: [id])
+  pipeline   Pipeline    @relation(fields: [pipelineId], references: [id])
+  stage      Stage       @relation(fields: [stageId], references: [id])
   activities Activity[]
   tasks      Task[]
   noteLinks  Note[]
@@ -388,7 +408,7 @@ model Activity {
   type        ActivityType
   title       String
   description String?
-  duration    Int?         // minutes
+  duration    Int? // minutes
   outcome     String?
   scheduledAt DateTime?
   completedAt DateTime?
@@ -446,7 +466,7 @@ model Task {
 // ─── Note ─────────────────────────────────────────────────────────────────────
 
 model Note {
-  id        String        @id @default(cuid())
+  id        String         @id @default(cuid())
   teamId    String
   userId    String
   content   String
@@ -454,14 +474,14 @@ model Note {
   contactId String?
   leadId    String?
   dealId    String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
-  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id])
-  contact   Contact?   @relation(fields: [contactId], references: [id])
-  lead      Lead?      @relation(fields: [leadId], references: [id])
-  deal      Deal?      @relation(fields: [dealId], references: [id])
+  team       Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id])
+  contact    Contact?    @relation(fields: [contactId], references: [id])
+  lead       Lead?       @relation(fields: [leadId], references: [id])
+  deal       Deal?       @relation(fields: [dealId], references: [id])
   embeddings Embedding[]
 
   @@index([teamId])
@@ -474,32 +494,32 @@ model Note {
 // ─── Email ────────────────────────────────────────────────────────────────────
 
 model Email {
-  id          String      @id @default(cuid())
-  teamId      String
-  userId      String
-  templateId  String?
-  to          String[]
-  cc          String[]
-  bcc         String[]
-  subject     String
-  body        String
-  status      EmailStatus @default(DRAFT)
-  sentAt      DateTime?
-  openedAt    DateTime?
-  clickedAt   DateTime?
-  resendId    String?     // Resend message ID
-  contactId   String?
-  leadId      String?
-  dealId      String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String      @id @default(cuid())
+  teamId     String
+  userId     String
+  templateId String?
+  to         String[]
+  cc         String[]
+  bcc        String[]
+  subject    String
+  body       String
+  status     EmailStatus @default(DRAFT)
+  sentAt     DateTime?
+  openedAt   DateTime?
+  clickedAt  DateTime?
+  resendId   String? // Resend message ID
+  contactId  String?
+  leadId     String?
+  dealId     String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
-  team     Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user     User          @relation(fields: [userId], references: [id])
+  team     Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User           @relation(fields: [userId], references: [id])
   template EmailTemplate? @relation(fields: [templateId], references: [id])
-  contact  Contact?      @relation(fields: [contactId], references: [id])
-  lead     Lead?         @relation(fields: [leadId], references: [id])
-  deal     Deal?         @relation(fields: [dealId], references: [id])
+  contact  Contact?       @relation(fields: [contactId], references: [id])
+  lead     Lead?          @relation(fields: [leadId], references: [id])
+  deal     Deal?          @relation(fields: [dealId], references: [id])
 
   @@index([teamId])
   @@index([userId])
@@ -530,7 +550,7 @@ model Notification {
   body      String
   isRead    Boolean          @default(false)
   readAt    DateTime?
-  metadata  Json?            // { leadId, dealId, etc. }
+  metadata  Json? // { leadId, dealId, etc. }
   createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -551,22 +571,22 @@ model Webhook {
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
-  team         Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  deliveries   WebhookDelivery[]
+  team       Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
 
   @@index([teamId])
 }
 
 model WebhookDelivery {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   webhookId   String
   event       WebhookEvent
   payload     Json
   statusCode  Int?
   response    String?
-  attempts    Int      @default(0)
+  attempts    Int          @default(0)
   deliveredAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
 
   webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
@@ -576,17 +596,17 @@ model WebhookDelivery {
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  teamId     String
-  userId     String
-  action     String   // e.g. "lead.created", "deal.stage_moved"
-  entity     String   // e.g. "Lead", "Deal"
-  entityId   String
-  before     Json?
-  after      Json?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  action    String // e.g. "lead.created", "deal.stage_moved"
+  entity    String // e.g. "Lead", "Deal"
+  entityId  String
+  before    Json?
+  after     Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
@@ -595,16 +615,15 @@ model AuditLog {
   @@index([userId])
 }
 
-
 // --- Embedding (pgvector) -----------------------------------------------------
 
 model Embedding {
-  id        String                     @id @default(cuid())
+  id        String                      @id @default(cuid())
   entity    String
   entityId  String
   content   String
   vector    Unsupported("vector(1536)")
-  createdAt DateTime                   @default(now())
+  createdAt DateTime                    @default(now())
 
   contact   Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
   contactId String?

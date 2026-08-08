@@ -5,10 +5,10 @@ import { LeadFilterDto } from "./dto/lead-filter.dto";
 import { UpdateLeadDto } from "./dto/update-lead.dto";
 import { ConvertLeadDto } from "./dto/convert-lead.dto";
 import { LeadStatus, Prisma } from "@prisma/client";
-
+import { AnalyticsProducer } from "@/queues/analytics/analytics.producer";
 @Injectable()
 export class LeadsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService,private analyticProducer:AnalyticsProducer) {}
 
   async create(teamId: string, dto: CreateLeadDto) {
     return this.prisma.lead.create({
@@ -70,8 +70,8 @@ export class LeadsService {
     if (lead.status === LeadStatus.CONVERTED) {
       throw new BadRequestException('Lead already converted');
     }
-
-    return this.prisma.$transaction(async (tx) => {
+    
+    const result=await this.prisma.$transaction(async (tx) => {
       const contact = await tx.contact.create({
         data: {
           teamId,
@@ -104,7 +104,9 @@ export class LeadsService {
         },
       });
 
-      return { contact, deal };
     });
+    await this.analyticProducer.leadConverted(lead.teamId,lead.id);
+    return { result };
+
   }
 }
