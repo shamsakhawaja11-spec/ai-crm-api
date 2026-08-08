@@ -105,7 +105,10 @@ export class LeadsService {
       });
 
     });
-    await this.analyticProducer.leadConverted(lead.teamId,lead.id);
+    await this.analyticProducer.leadConverted({
+      teamId: lead.teamId,
+      leadId: lead.id,
+    });
     return { result };
 
   }
