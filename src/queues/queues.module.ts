@@ -2,6 +2,13 @@ import { Module } from "@nestjs/common";
 import { BullModule } from "@nestjs/bullmq";
 import { EmailProducer } from './email/email.producer';
 import { EmailConsumer } from './email/email.consumer';
+import {
+  WebhooksProducer,
+} from './webhooks/webhook.producer';
+
+import {
+  WebhookConsumer,
+} from './webhooks/webhook.consumer';
 export const QUEUE_NAMES = {
   EMAIL: 'email',
   AI: 'ai-processing',
@@ -23,8 +30,10 @@ export const QUEUE_NAMES = {
    providers: [
     EmailProducer,
     EmailConsumer,
+    WebhooksProducer,
+    WebhookConsumer,
   ],
 
-  exports: [BullModule,EmailProducer],
+  exports: [BullModule,EmailProducer,WebhooksProducer],
 })
 export class QueuesModule {}
