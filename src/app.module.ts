@@ -26,7 +26,7 @@ import { RealtimeModule } from './shared/real-time/realtime.module';
     DatabaseModule,AuthModule,UsersModule,TeamsModule,
     ContactsModule,CompaniesModule,LeadsModule,
     DealsModule,PipelineModule,ActivitiesModule,TasksModule,NotesModule,
-    RedisModule,EmailModule,StorageModule,SearchModule,QueuesModule,RealtimeModule,
+    RedisModule,EmailModule,StorageModule,SearchModule,QueuesModule,RealtimeModule,EmailModule,
     BullModule.forRootAsync({
       imports:[ConfigModule],
       inject:[ConfigService],
